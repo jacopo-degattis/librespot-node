@@ -17,6 +17,7 @@ interface HandshakeOptions {
 	product?: number
 	productFlags?: number[]
 	platform?: number
+	version?: number
 }
 
 interface LibrespotSessionOptions {

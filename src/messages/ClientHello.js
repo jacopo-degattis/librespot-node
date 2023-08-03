@@ -7,6 +7,7 @@ export default class ClientHello extends HandshakeMessage {
 		this.product = options.product
 		this.productFlags = options.productFlags
 		this.platform = options.platform
+		this.version = options.version
 	}
 
 	fromObject({ publicKey }) {
@@ -24,7 +25,7 @@ export default class ClientHello extends HandshakeMessage {
 				platform:
 					this.platform ??
 					this.protoRoot.getEnum('Platform').PLATFORM_LINUX_X86,
-				version: 0x10800000000
+				version: this.version
 			},
 			cryptosuitesSupported: [
 				this.protoRoot.getEnum('Cryptosuite').CRYPTO_SUITE_SHANNON
