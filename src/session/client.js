@@ -80,25 +80,27 @@ export default class Client {
 
 	async readEncryptedPayload(shannon) {
 		const cmdBuffer = await this.read(1, { partial: true })
-		shannon.decrypt(cmdBuffer)
-		const sizeBuffer = await this.read(2, { partial: true, prioritized: true })
-		shannon.decrypt(sizeBuffer)
+		const decryptedCmdBuffer = shannon.decrypt(cmdBuffer)
 
-		const cmd = cmdBuffer.readUInt8()
-		const size = sizeBuffer.readUInt16BE()
+		const sizeBuffer = await this.read(2, { partial: true, prioritized: true })
+		const decryptedSizeBuffer = shannon.decrypt(sizeBuffer)
+
+		const cmd = decryptedCmdBuffer.readUInt8()
+		const size = decryptedSizeBuffer.readUInt16BE()
 
 		const payload = await this.read(size, { partial: true, prioritized: true })
-		shannon.decrypt(payload)
+		const decryptedPayload = shannon.decrypt(payload)
 
 		const mac = await this.read(4, { prioritized: true })
 
 		const expectedMac = Buffer.alloc(4)
-		shannon.finish(expectedMac)
+		const expectedDecryptedMac = shannon.finish(expectedMac)
 
-		if (!expectedMac.equals(mac)) throw new Error('Received mac mismatch')
+		if (!expectedDecryptedMac.equals(mac))
+			throw new Error('Received mac mismatch')
 
 		logger.info('cmd: 0x' + cmd.toString(16).toUpperCase())
 
-		return { cmd, payload }
+		return { cmd, payload: decryptedPayload }
 	}
 }

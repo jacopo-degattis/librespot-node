@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import EventEmitter from 'events'
-import Shannon from 'shannon-bindings'
+import Shannon from '../shannon.js'
 import Client from './client.js'
 import logger from '../utils/logger.js'
 import handler from './handler.js'
@@ -244,10 +244,10 @@ export default class LibrespotSession extends EventEmitter {
 		let payload = Buffer.concat([Buffer.from([cmd]), size, request])
 		const mac = Buffer.allocUnsafe(4)
 
-		this.send.shannon.encrypt(payload)
-		this.send.shannon.finish(mac)
+		const encryptedPayload = this.send.shannon.encrypt(payload)
+		const encryptedMac = this.send.shannon.finish(mac)
 
-		payload = Buffer.concat([payload, mac])
+		payload = Buffer.concat([encryptedPayload, encryptedMac])
 
 		return this.client.write(payload)
 	}
