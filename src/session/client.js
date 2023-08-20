@@ -1,47 +1,82 @@
-import net from 'net'
+// import net from 'net'
 import logger from '../utils/logger.js'
 
+// let net = null
+// import('net')
+// 	.then(module => {
+// 		net = module
+// 	})
+// 	.catch(err => console.log('firefox os detected', err))
+
 export default class Client {
-	constructor(address, port) {
+	constructor(address, port, runtimeEnv) {
 		this.address = address
 		this.port = port
-		this.client = new net.Socket()
-		this.client.setKeepAlive(true)
-		this.client.on('close', () => {
-			logger.info('Connection closed.')
-		})
-		this.dataReceived = Buffer.from('')
-		this.client.on('data', data => {
-			logger.info('> Received data, length:', data.length)
-			logger.info('> Buffered data length', this.dataReceived.length)
-			this.dataReceived = Buffer.concat([this.dataReceived, data])
-			for (let i = 0; i < this.readers.length; i++) {
-				const { nbOfBytes, partial, resolve } = this.readers[i]
-				const dataRead = this.readAndSlice(nbOfBytes)
-				if (dataRead) {
-					resolve(dataRead)
-					this.readers.shift()
-					if (partial) break
-				} else {
-					break
-				}
+		this.client
+		this.runtimeEnv = runtimeEnv
+
+		logger.info('Runtime env ', runtimeEnv)
+
+		if (runtimeEnv === 'COMPUTER_OS') {
+			// this.client = new net.Socket()
+			this.client.setKeepAlive(true)
+			this.client.on('close', () => {
+				logger.info('Connection closed.')
+			})
+			this.dataReceived = Buffer.from('')
+			this.client.on('data', data => this.onDataCallbackFn(data))
+			this.readers = []
+		} else {
+			// eslint-disable-next-line no-undef
+			this.client = navigator.mozTCPSocket.open(address, port)
+			this.client.onclose = () => logger.info('Connection closed.')
+			this.dataReceived = Buffer.from('')
+			this.client.ondata = data => this.onDataCallbackFn(data)
+			this.readers = []
+		}
+	}
+
+	onDataCallbackFn(data) {
+		console.log('> Received data, ', data)
+		logger.info('> Received data, length:', data.length)
+		logger.info('> Buffered data length', this.dataReceived.length)
+		this.dataReceived = Buffer.concat([this.dataReceived, data])
+		for (let i = 0; i < this.readers.length; i++) {
+			const { nbOfBytes, partial, resolve } = this.readers[i]
+			const dataRead = this.readAndSlice(nbOfBytes)
+			if (dataRead) {
+				resolve(dataRead)
+				this.readers.shift()
+				if (partial) break
+			} else {
+				break
 			}
-		})
-		this.readers = []
+		}
 	}
 
 	connect() {
-		return new Promise(resolve =>
-			this.client.connect(this.port, this.address, () => {
-				logger.info('Connected to ' + this.address)
-				resolve()
-			})
-		)
+		return new Promise(resolve => {
+			console.log('runtimeEnv', this.runtimeEnv)
+
+			if (this.runtimeEnv === 'COMPUTER_OS') {
+				this.client.connect(this.port, this.address, () => {
+					logger.info('Connected to ' + this.address)
+					resolve()
+				})
+			}
+
+			resolve()
+		})
 	}
 
 	destroy() {
 		this.destroyed = true
-		this.client.destroy()
+
+		if (this.runtimeEnv === 'COMPUTER_OS') {
+			this.client.destroy()
+		} else {
+			this.client.close()
+		}
 	}
 
 	readAndSlice(nbOfBytes) {
@@ -67,7 +102,14 @@ export default class Client {
 	}
 
 	write(payload) {
-		this.client.write(payload)
+		console.log('> Writing payload, ', payload)
+		if (this.runtimeEnv === 'COMPUTER_OS') {
+			console.log('calling COMPUTER_OS write method')
+			this.client.write(payload)
+		} else if (this.runtimeEnv === 'FIREFOX_OS') {
+			console.log('calling FIREFOX_OS write method')
+			this.client.send(payload)
+		}
 	}
 
 	async readHandshakePayload() {

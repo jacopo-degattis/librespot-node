@@ -1,5 +1,3 @@
-import fetch from 'node-fetch'
-
 export async function getRandomOf(service) {
 	const serviceReq = await fetch(
 		`http://apresolve.spotify.com/?type=${encodeURIComponent(service)}`

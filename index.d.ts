@@ -20,11 +20,17 @@ interface HandshakeOptions {
 	version?: number
 }
 
+declare enum RuntimeEnvironment {
+	COMPUTER_OS = 'COMPUTER_OS',
+	FIREFOX_OS = 'FIREFOX_OS'
+}
+
 interface LibrespotSessionOptions {
 	deviceId: string
 	address?: string
 	port?: number
 	handshakeOptions?: HandshakeOptions
+	runtimeEnvironment?: RuntimeEnvironment
 }
 
 interface LibrespotOptions {

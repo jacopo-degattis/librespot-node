@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'crypto-browserify'
 import EventEmitter from 'events'
 import Shannon from '../shannon.js'
 import Client from './client.js'
@@ -49,6 +49,7 @@ export default class LibrespotSession extends EventEmitter {
 	handshakeOptions?: HandshakeOptions
 	setupComplete: boolean
 	deviceId: string
+	options: LibrespotSessionOptions
 	attributes: { [key: string]: string | number } = {}
 
 	constructor(options: LibrespotSessionOptions) {
@@ -64,6 +65,7 @@ export default class LibrespotSession extends EventEmitter {
 		this.recv = {
 			nonce: 0
 		}
+		this.options = options
 		this.mercury = new MercuryManager(this)
 		this.setupComplete = false
 	}
@@ -87,7 +89,8 @@ export default class LibrespotSession extends EventEmitter {
 				logger.error('Error occured, using the default endpoint.')
 			}
 		}
-		this.client = new Client(address, port)
+		this.client = new Client(address, port, this.options.runtimeEnvironment)
+		console.log('client', this.client)
 
 		await this.handshake()
 
@@ -107,7 +110,14 @@ export default class LibrespotSession extends EventEmitter {
 
 	async handshake() {
 		if (!this.client) throw new Error('No client')
-		await this.client.connect()
+		// await this.client.connect()
+		console.log(
+			'> ClientHello',
+			ClientHello,
+			await new ClientHello(this.handshakeOptions).init()
+		)
+		console.log('> DiffieHellman.getPublicKey(), ', this.diffie.getPublicKey)
+		console.log('> DiffieHellman, ', this.diffie.getPublicKey())
 
 		const clientHello = await new ClientHello(this.handshakeOptions).init()
 		clientHello.from({ publicKey: this.diffie.getPublicKey() })
@@ -120,6 +130,7 @@ export default class LibrespotSession extends EventEmitter {
 			clientHelloMessageLength,
 			clientHelloBuffer
 		])
+		console.log('writing to tcp server', clientHelloPayload)
 		this.client.write(clientHelloPayload)
 
 		const apResponsePayload = await this.client.readHandshakePayload()

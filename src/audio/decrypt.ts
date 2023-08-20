@@ -1,6 +1,8 @@
 import stream from 'stream'
 import crypto from 'crypto'
+import { Buffer } from 'buffer'
 
+// const iv = Buffer.from('72e067fbddcbcf77ebe8bc643f630d93', 'hex')
 const iv = Buffer.from('72e067fbddcbcf77ebe8bc643f630d93', 'hex')
 
 class skipTransform extends stream.Transform {

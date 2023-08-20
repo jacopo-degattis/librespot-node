@@ -1,8 +1,5 @@
 import path from 'path'
-import { fileURLToPath } from 'url'
 import protobuf from 'protobufjs'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default class Message {
 	constructor(protoFile, typeName) {
@@ -11,10 +8,16 @@ export default class Message {
 	}
 
 	async init() {
+		console.log('hereeeeeee boy')
+		// const path = path.join('../../', 'proto/', this.protoFile)
+		console.log('got path', path)
 		this.protoRoot = await protobuf.load(
-			path.join(__dirname, '../../proto/', this.protoFile)
+			`../../proto/${this.protoFile}`
+			// path.join('../../', 'proto/', this.protoFile)
 		)
+		console.log('get  path', path)
 		this.type = this.protoRoot.lookupType(this.typeName)
+		console.log('gut  path', path)
 		return this
 	}
 

@@ -16,6 +16,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p tsconfig.json",
+		"build:webpack": "webpack",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write ."
 	},
@@ -23,8 +24,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"@types/node-fetch": "^2.6.2",
+		"crypto-browserify": "^3.12.0",
 		"debug": "^4.1.1",
-		"dev-librespot": "./",
 		"encoding": "^0.1.13",
 		"express": "^4.18.2",
 		"fast-xml-parser": "^4.1.1",
