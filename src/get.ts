@@ -78,6 +78,19 @@ export default class LibrespotGet {
 		}
 	}
 
+	async currentUserMetadata(): Promise<SpotifyUser> {
+		const resp = await this.#librespot.fetchWithAuth(
+			`https://api.spotify.com/v1/me`
+		)
+		return parseUser(await resp.json())
+	}
+
+	async currentUserPlaylists(): Promise<SpotifyPlaylist[]> {
+		return (
+			await this.#librespot.loopNext(`https://api.spotify.com/v1/me/playlists`)
+		).map(parsePlaylist)
+	}
+
 	async userMetadata(userId: string): Promise<SpotifyUser> {
 		const resp = await this.#librespot.fetchWithAuth(
 			`https://api.spotify.com/v1/users/${userId}`,
@@ -102,10 +115,12 @@ export default class LibrespotGet {
 		).map(parsePlaylist)
 	}
 
-	async user(userId: string, maxPages?: number): Promise<SpotifyUser> {
+	async user(userId?: string, maxPages?: number): Promise<SpotifyUser> {
 		const [userMetadata, userPlaylists] = await Promise.all([
-			this.userMetadata(userId),
-			this.userPlaylists(userId, maxPages)
+			userId ? this.userMetadata(userId) : this.currentUserMetadata(),
+			userId
+				? this.userPlaylists(userId, maxPages)
+				: this.currentUserPlaylists()
 		])
 		return {
 			...userMetadata,
